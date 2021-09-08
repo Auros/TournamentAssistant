@@ -119,8 +119,14 @@ namespace TournamentAssistant.ViewControllers
                 _bpmText.text = Mathf.RoundToInt(_selectedLevel.beatsPerMinute).ToString();
                 if (_selectedDifficultyBeatmap != null)
                 {
-                    _npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesType / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
-                    _notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesType.ToString();
+                    //Would be nice if we could always preserve support for the previous build of the game for people staying behind waiting for other mods to update
+                    //Especially if the change is this simple
+                    //cuttableNotesType on 1.16.4 
+                    //cuttableNotesCount on 1.17
+                    //_npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesType / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                    //_notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesType.ToString();
+                    _npsText.text = (_selectedDifficultyBeatmap.beatmapData.cuttableNotesCount / _selectedLevel.beatmapLevelData.audioClip.length).ToString("0.00");
+                    _notesCountText.text = _selectedDifficultyBeatmap.beatmapData.cuttableNotesCount.ToString();
                     _obstaclesCountText.text = _selectedDifficultyBeatmap.beatmapData.obstaclesCount.ToString();
                     _bombsCountText.text = _selectedDifficultyBeatmap.beatmapData.bombsCount.ToString();
                 }
