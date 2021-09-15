@@ -38,6 +38,7 @@ namespace TournamentAssistant.FlowCoordinators
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
+            _ = _songSelectionView;
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
             if (firstActivation)
             {

@@ -30,7 +30,7 @@ namespace TournamentAssistant.Behaviours
             _audioTimeSyncController = audioTimeSyncController;
 
             if (roomData.match != null)
-                _destinationPlayers = (_roomData.match != null && !_roomData.matchOptions.UseFloatingScoreboard) ? new Guid[] { _roomData.match.Leader.Id } : _roomData.match.Players.Select(x => x.Id).Union(new Guid[] { _roomData.match.Leader.Id }).ToArray();
+                _destinationPlayers = (_roomData.match != null && !_roomData.matchOptions.UseFloatingScoreboard) ? new Guid[] { _roomData.match.Leader.Id } : roomData.match.Players.Select(x => x.Id).Union(new Guid[] { roomData.match.Leader.Id }).ToArray();
             else
                 _destinationPlayers = Array.Empty<Guid>();
 

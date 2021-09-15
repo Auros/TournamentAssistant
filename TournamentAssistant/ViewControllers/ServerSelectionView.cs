@@ -18,7 +18,7 @@ namespace TournamentAssistant.ViewControllers
     internal class ServerSelectionView : BSMLAutomaticViewController
     {
         [Inject]
-        protected readonly SiraLog _siraLog;
+        protected readonly SiraLog _siraLog = null!;
 
         [UIComponent("server-list")]
         protected readonly CustomCellListTableData _serverList = null!;

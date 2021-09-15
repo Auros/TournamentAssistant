@@ -78,7 +78,7 @@ namespace TournamentAssistant.ViewControllers
         protected readonly Button _playButton = null!;
 
         [UIComponent("buttons-transform")]
-        protected readonly RectTransform _buttonsTransform;
+        protected readonly RectTransform _buttonsTransform = null!;
 
         [UIAction("#post-parse")]
         protected void Parsed()

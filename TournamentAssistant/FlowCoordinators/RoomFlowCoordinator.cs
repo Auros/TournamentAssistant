@@ -22,7 +22,7 @@ namespace TournamentAssistant.FlowCoordinators
         protected MenuLightsPresetSO? _resultsClearedLightsPreset;
 
         [Inject]
-        protected readonly SiraLog _siraLog;
+        protected readonly SiraLog _siraLog = null!;
 
         [Inject]
         protected readonly PluginClient _pluginClient = null!;

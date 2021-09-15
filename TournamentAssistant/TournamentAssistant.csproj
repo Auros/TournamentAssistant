@@ -12,6 +12,7 @@
     <Copyright>Copyright ©  2019</Copyright>
     <AssemblyName>TournamentAssistant</AssemblyName>
     <RootNamespace>TournamentAssistant</RootNamespace>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
