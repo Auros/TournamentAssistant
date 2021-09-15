@@ -158,7 +158,7 @@ namespace TournamentAssistant.FlowCoordinators
                 player.ModList = PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
                 UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    _gameplaySetupViewController.Setup(false, true, true, GameplaySetupViewController.GameplayMode.SinglePlayer);
+                    _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
                     SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
                     SetRightScreenViewController(_ongoingGameListView, ViewController.AnimationType.In);
                     _ongoingGameListView.ClearMatches();
