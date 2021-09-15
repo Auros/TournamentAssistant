@@ -14,8 +14,8 @@ namespace TournamentAssistant.Managers
 {
     internal interface ILevelService
     {
-        Task<IPreviewBeatmapLevel?> DownloadLevel(string name, string hash, string url, CancellationToken token, IProgress<double>? downloadProgress = null);
-        IPreviewBeatmapLevel? TryGetLevel(string hash, bool custom = true);
+        Task<IBeatmapLevel?> DownloadLevel(string name, string hash, string url, CancellationToken token, IProgress<double>? downloadProgress = null);
+        IBeatmapLevel? TryGetLevel(string hash, bool custom = true);
     }
 
     internal class TALevelService : ILevelService
@@ -31,7 +31,7 @@ namespace TournamentAssistant.Managers
             _beatmapLevelsModel = beatmapLevelsModel;
         }
 
-        public async Task<IPreviewBeatmapLevel?> DownloadLevel(string name, string hash, string url, CancellationToken token, IProgress<double>? downloadProgress = null)
+        public async Task<IBeatmapLevel?> DownloadLevel(string name, string hash, string url, CancellationToken token, IProgress<double>? downloadProgress = null)
         {
             var response = await _siraClient.SendAsync(HttpMethod.Get, url, token, progress: downloadProgress);
             if (!response.IsSuccessStatusCode)
@@ -76,11 +76,12 @@ namespace TournamentAssistant.Managers
             return levelExists;
         }
 
-        public IPreviewBeatmapLevel? TryGetLevel(string hash, bool custom = true)
+        public IBeatmapLevel? TryGetLevel(string hash, bool custom = true)
         {
             if (custom)
                 hash = $"custom_level_{hash.ToUpper()}";
-            return _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks.SelectMany(bm => bm.beatmapLevelCollection.beatmapLevels).FirstOrDefault(lvl => lvl.levelID == hash);
+
+            return _beatmapLevelsModel.GetBeatmapLevelIfLoaded(hash);
         }
 
         private async Task<string> ExtractZipAsync(byte[] zip, string name, string customSongsPath, bool overwrite = false)
