@@ -20,11 +20,21 @@ namespace TournamentAssistant.ViewControllers
 
         public event Action<Player>? PlayerSelected;
 
+        private List<PlayerCellInfo> _players = new();
+
+        private void SetPlayers(List<PlayerCellInfo> value)
+        {
+            _players = value;
+            if (_playerList != null)
+            {
+                _playerList.data = new List<CustomCellInfo>(_players);
+                _playerList.tableView.ReloadData();
+            }
+        }
+
         public void SetPlayers(List<Player> players)
         {
-            _playerList.data.Clear();
-            _playerList.data.AddRange(players.Select(p => new PlayerCellInfo(p)));
-            _playerList.tableView.ReloadData();
+            SetPlayers(players.Select(p => new PlayerCellInfo(p)).ToList());
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -38,7 +48,7 @@ namespace TournamentAssistant.ViewControllers
             }
             if (addedToHierarchy)
             {
-                _playerList.tableView.ReloadData();
+                SetPlayers(_players);
             }
         }
 

@@ -56,7 +56,7 @@ namespace TournamentAssistant.Managers
             {
                 SongCore.Loader.SongsLoadedEvent += Release;
                 SongCore.Collections.AddSong($"custom_level_", "");
-                SongCore.Loader.Instance.RefreshSongs(false);
+                SongCore.Loader.Instance.RefreshSongs(true);
                 await semaphoreSlim.WaitAsync(CancellationToken.None);
             }
             catch (Exception e)
@@ -65,12 +65,14 @@ namespace TournamentAssistant.Managers
                 _siraLog.Logger.Error(e);
                 return null;
             }
-            return TryGetLevel(hash);
+
+            var result = await _beatmapLevelsModel.GetBeatmapLevelAsync("custom_level_" + hash, token);
+            return result.beatmapLevel;
         }
 
         public bool LevelIsInstalled(string hash, bool custom = true)
         {
-            if (custom)
+            if (custom && !hash.StartsWith("custom_level_"))
                 hash = $"custom_level_{hash.ToUpper()}";
             bool levelExists = _beatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks.Any(bm => bm.beatmapLevelCollection.beatmapLevels.Any(lvl => lvl.levelID == hash));
             return levelExists;
@@ -78,7 +80,7 @@ namespace TournamentAssistant.Managers
 
         public IBeatmapLevel? TryGetLevel(string hash, bool custom = true)
         {
-            if (custom)
+            if (custom && !hash.StartsWith("custom_level_"))
                 hash = $"custom_level_{hash.ToUpper()}";
 
             return _beatmapLevelsModel.GetBeatmapLevelIfLoaded(hash);

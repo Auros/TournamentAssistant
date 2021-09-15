@@ -3,6 +3,7 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using Polyglot;
+using SiraUtil.Tools;
 using SongCore;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,9 @@ namespace TournamentAssistant.ViewControllers
     internal class SongDetailView : BSMLAutomaticViewController
     {
         [Inject]
+        protected readonly SiraLog _siraLog = null!;
+
+        [Inject]
         protected readonly PlayerDataModel _playerDataModel = null!;
 
         public event Action<IDifficultyBeatmap>? BeatmapChanged;
@@ -32,7 +36,7 @@ namespace TournamentAssistant.ViewControllers
         private IDifficultyBeatmap? _selectedDifficultyBeatmap;
         private readonly List<BeatmapCharacteristicSO> _beatmapCharacteristics = new();
 
-        [UIComponent("level-details-transfom")]
+        [UIComponent("level-details-transform")]
         protected readonly RectTransform _levelDetailsTransform = null!;
 
         [UIComponent("song-name-text")]
@@ -179,7 +183,10 @@ namespace TournamentAssistant.ViewControllers
 
                 _difficultyControl.SetTexts(difficultyLabels);
             }
-            else _difficultyControl.SetTexts(diffBeatmaps.Select(x => x.difficulty.ToString().Replace("Plus", "+")).ToArray());
+            else
+            {
+                _difficultyControl.SetTexts(diffBeatmaps.Select(x => x.difficulty.ToString().Replace("Plus", "+")).ToArray());
+            }
 
             if (closestDifficulty == null)
                 return;

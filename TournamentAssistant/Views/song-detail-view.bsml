@@ -41,7 +41,7 @@
     </bg>
   </stack>
 
-  <horizontal id='buttons-rect' anchor-pos-y='0'>
+  <horizontal id='buttons-transform' anchor-pos-y='0'>
     <button id="play-button" text="PLAY" on-click="play-pressed"/>
   </horizontal>
 </vertical>

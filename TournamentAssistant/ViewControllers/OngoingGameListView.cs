@@ -2,11 +2,13 @@
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
+using SiraUtil.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using TournamentAssistantShared.Models;
 using UnityEngine;
+using Zenject;
 using static BeatSaberMarkupLanguage.Components.CustomListTableData;
 
 namespace TournamentAssistant.ViewControllers
@@ -15,6 +17,9 @@ namespace TournamentAssistant.ViewControllers
     [HotReload(RelativePathToLayout = @"..\Views\ongoing-game-list-view.bsml")]
     internal class OngoingGameListView : BSMLAutomaticViewController
     {
+        [Inject]
+        protected readonly SiraLog _siraLog = null!;
+
         [UIComponent("game-list")]
         protected readonly CustomListTableData _gameList = null!;
 
@@ -32,14 +37,14 @@ namespace TournamentAssistant.ViewControllers
                 _matches = value;
                 if (_gameList != null)
                 {
-                    _gameList.data = new List<CustomCellInfo>(_matches.Cast<CustomCellInfo>() as CustomCellInfo[]);
+                    _gameList.data = new List<CustomCellInfo>(_matches);
                     _gameList.tableView.ReloadData();
                 }
             }
         }
 
         [UIAction("match-clicked")]
-        private void ClickedRow(TableView table, int row)
+        protected void ClickedRow(TableView table, int row)
         {
             MatchClicked?.Invoke((_gameList.data[row] as MatchCellInfo)!.match);
         }

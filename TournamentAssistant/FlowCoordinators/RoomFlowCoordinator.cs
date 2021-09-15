@@ -92,26 +92,58 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                ServerDisconnected(_pluginClient);
+                try
+                {
+                    _siraLog.Debug("Disconnected from the server.");
+                    ServerDisconnected(_pluginClient);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
         private void PluginClient_LoadedSong(IBeatmapLevel level)
         {
-            SongLoaded(_pluginClient, level);
+            try
+            {
+                _siraLog.Debug($"Loaded a new song '{level.songName}'.");
+                SongLoaded(_pluginClient, level);
+            }
+            catch (Exception e)
+            {
+                _siraLog.Error(e);
+            }
         }
 
         private void PluginClient_StartLevel(StartLevelOptions level, MatchOptions match)
         {
-            PlaySong(_pluginClient, level, match);
+            try
+            {
+                _siraLog.Debug($"Starting a level, '{level.Level.songName}'.");
+                PlaySong(_pluginClient, level, match);
+            }
+            catch (Exception e)
+            {
+                _siraLog.Error(e);
+            }
         }
 
         private void PluginClient_MatchCreated(Match match)
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                _ongoingGameListView.AddMatches(match);
-                MatchCreated(_pluginClient, match);
+                try
+                {
+                    _siraLog.Debug($"A new match '{match.Guid}' has been created.");
+                    _ongoingGameListView.AddMatches(match);
+                    MatchCreated(_pluginClient, match);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
@@ -119,7 +151,15 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                MatchUpdated(_pluginClient, match);
+                try
+                {
+                    _siraLog.Debug($"The match info for '{match.Guid}' has been updated.");
+                    MatchUpdated(_pluginClient, match);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
@@ -127,8 +167,16 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                _ongoingGameListView.RemoveMatch(match);
-                MatchDeleted(_pluginClient, match);
+                try
+                {
+                    _siraLog.Debug($"The match '{match.Guid}' has been deleted.");
+                    _ongoingGameListView.RemoveMatch(match);
+                    MatchDeleted(_pluginClient, match);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
@@ -136,7 +184,15 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                PlayerUpdated(_pluginClient, player);
+                try
+                {
+                    _siraLog.Debug($"The player '{player.Name}' has been updated.");
+                    PlayerUpdated(_pluginClient, player);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
@@ -144,9 +200,17 @@ namespace TournamentAssistant.FlowCoordinators
         {
             UnityMainThreadTaskScheduler.Factory.StartNew(() =>
             {
-                SetLeftScreenViewController(null, ViewController.AnimationType.None);
-                SetRightScreenViewController(null, ViewController.AnimationType.None);
-                FailedToConnect(_pluginClient, connect);
+                try
+                {
+                    _siraLog.Warning($"Unable to connect to the server.");
+                    SetLeftScreenViewController(null, ViewController.AnimationType.None);
+                    SetRightScreenViewController(null, ViewController.AnimationType.None);
+                    FailedToConnect(_pluginClient, connect);
+                }
+                catch (Exception e)
+                {
+                    _siraLog.Error(e);
+                }
             });
         }
 
@@ -154,16 +218,24 @@ namespace TournamentAssistant.FlowCoordinators
         {
             if (_pluginClient.Self is Player player)
             {
+                _siraLog.Debug($"Connected to the server.");
                 _pluginClient.UpdatePlayer(player);
                 player.ModList = PluginManager.EnabledPlugins.Select(x => x.Id).ToArray();
                 UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                 {
-                    _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
-                    SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
-                    SetRightScreenViewController(_ongoingGameListView, ViewController.AnimationType.In);
-                    _ongoingGameListView.ClearMatches();
-                    _ongoingGameListView.AddMatches(_pluginClient.State.Matches);
-                    Connected(_pluginClient, player, connect);
+                    try
+                    {
+                        _gameplaySetupViewController.Setup(false, true, true, false, PlayerSettingsPanelController.PlayerSettingsPanelLayout.Singleplayer);
+                        SetLeftScreenViewController(_gameplaySetupViewController, ViewController.AnimationType.In);
+                        SetRightScreenViewController(_ongoingGameListView, ViewController.AnimationType.In);
+                        _ongoingGameListView.ClearMatches();
+                        _ongoingGameListView.AddMatches(_pluginClient.State.Matches);
+                        Connected(_pluginClient, player, connect);
+                    }
+                    catch (Exception e)
+                    {
+                        _siraLog.Error(e);
+                    }
                 });
             }
         }

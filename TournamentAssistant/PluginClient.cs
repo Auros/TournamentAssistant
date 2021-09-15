@@ -28,17 +28,19 @@ namespace TournamentAssistant
         private readonly ILevelService _levelService;
         private readonly PlayerDataModel _playerDataModel;
         private readonly IPlatformUserModel _platformUserModel;
+        private readonly BeatmapLevelsModel _beatmapLevelsModel;
 
         public Match? ActiveMatch { get; set; }
         public MatchOptions? ActiveMatchOptions { get; set; }
 
-        public PluginClient(Config config, SiraLog siraLog, ILevelService levelService, PlayerDataModel playerDataModel, IPlatformUserModel platformUserModel)
+        public PluginClient(Config config, SiraLog siraLog, ILevelService levelService, PlayerDataModel playerDataModel, IPlatformUserModel platformUserModel, BeatmapLevelsModel beatmapLevelsModel)
         {
             _config = config;
             _siraLog = siraLog;
             _levelService = levelService;
             _playerDataModel = playerDataModel;
             _platformUserModel = platformUserModel;
+            _beatmapLevelsModel = beatmapLevelsModel;
         }
 
         public async Task<Dictionary<CoreServer, State>> GetCoreServers()
@@ -155,33 +157,39 @@ namespace TournamentAssistant
                 {
                     if (!loadSong.LevelId.StartsWith("custom_level_"))
                     {
-                        var level = _levelService.TryGetLevel(loadSong.LevelId, false);
-                        if (level != null && level is IBeatmapLevel beatmap)
+                        _ = UnityMainThreadTaskScheduler.Factory.StartNew(() =>
                         {
-                            _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => LoadedSong?.Invoke(beatmap));
-                        }
-                        else
-                        {
-                            _siraLog.Error($"Could not find OST '{loadSong.LevelId}'");
-                        }
+                            _siraLog.Debug("Searching for OST.");
+                            var level = _levelService.TryGetLevel(loadSong.LevelId, false);
+                            if (level != null)
+                            {
+                                LoadedSong?.Invoke(level);
+                            }
+                            else
+                            {
+                                _siraLog.Error($"Could not find OST '{loadSong.LevelId}'");
+                            }
+                        });
                         return;
                     }
 
-                    var customLevel = _levelService.TryGetLevel(loadSong.LevelId);
+                    var result = await _beatmapLevelsModel.GetBeatmapLevelAsync(loadSong.LevelId, CancellationToken.None);
+                    var customLevel = result.beatmapLevel;
                     if (customLevel == null)
                     {
                         UpdateDownloadState(player, Player.DownloadStates.Downloading);
-                        customLevel = await _levelService.DownloadLevel(loadSong.LevelId, loadSong.LevelId, $"https://cdn.beatsaver.com/{loadSong.LevelId}.zip", CancellationToken.None);
+                        string url = $"https://na.cdn.beatsaver.com/{loadSong.LevelId.Replace("custom_level_", string.Empty).ToLowerInvariant()}.zip";
+                        customLevel = await _levelService.DownloadLevel(loadSong.LevelId, loadSong.LevelId, url, CancellationToken.None);
                         if (customLevel == null)
                         {
                             UpdateDownloadState(player, Player.DownloadStates.DownloadError);
                         }
                     }
 
-                    if (customLevel != null && customLevel is IBeatmapLevel customBeatmap)
+                    if (customLevel != null)
                     {
                         UpdateDownloadState(player, Player.DownloadStates.Downloaded);
-                        _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => LoadedSong?.Invoke(customBeatmap));
+                        _ = UnityMainThreadTaskScheduler.Factory.StartNew(() => LoadedSong?.Invoke(customLevel));
                     }
 
                 }

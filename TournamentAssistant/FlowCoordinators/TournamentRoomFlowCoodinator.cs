@@ -49,7 +49,7 @@ namespace TournamentAssistant.FlowCoordinators
             {
                 if (_match == null)
                 {
-                    _splashScreenView.Status = $"Connecting to \"{_host!.Name}\"...";
+                    _splashScreenView.Status = _pluginClient.Connected ? $"Connected to {_host!.Name}" : $"Connecting to \"{_host!.Name}\"...";
                     ProvideInitialViewControllers(_splashScreenView);
                 }
 
@@ -191,6 +191,8 @@ namespace TournamentAssistant.FlowCoordinators
             {
                 if (_match == null && match.Players.Contains(player))
                 {
+                    _match = match;
+                    _siraLog.Info("The player's match has been assigned.");
                     _splashScreenView.Status = "Match has been created. Waiting for coordinator to select a song.";
                     var screenSystem = this.GetField<ScreenSystem, FlowCoordinator>("_screenSystem");
                     screenSystem.SetBackButton(false, true);
@@ -212,6 +214,13 @@ namespace TournamentAssistant.FlowCoordinators
                     _songDetailView.SetSelectedCharacteristic(match.SelectedCharacteristic.SerializedName);
                     _songDetailView.SetSelectedDifficulty((int)match.SelectedDifficulty);
                 }
+
+                // Player has been kicked.
+                if (sender.Self is Player player && !match.Players.Any(p => p.UserId == player.UserId))
+                {
+                    _match = null;
+                    SwitchToWaitingForCoordinator();
+                }
             }
         }
 
@@ -219,14 +228,8 @@ namespace TournamentAssistant.FlowCoordinators
         {
             if (_match == match)
             {
-                if (_match == null)
-                {
-                    SwitchToWaitingForCoordinator();
-                }
-                else
-                {
-                    Dismiss();
-                }
+                _match = null;
+                SwitchToWaitingForCoordinator();
             }
         }
 
@@ -324,7 +327,6 @@ namespace TournamentAssistant.FlowCoordinators
             var localResults = localPlayer.GetPlayerLevelStatsData(map.level.levelID, map.difficulty, map.parentDifficultyBeatmapSet.beatmapCharacteristic);
             var highScore = localResults.highScore < results.modifiedScore;
 
-
             // Send final score to Host
             if (_pluginClient.Connected && _pluginClient.Self is Player player)
             {
@@ -416,7 +418,7 @@ namespace TournamentAssistant.FlowCoordinators
             }
             else if (!_songDetailView.GetField<bool, ViewController>("_isInTransition"))
             {
-                if (_match != null)
+                if (_match != null && _pluginClient.Connected)
                 {
                     if (_isHost)
                     {
