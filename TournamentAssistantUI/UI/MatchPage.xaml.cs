@@ -1,11 +1,9 @@
 ﻿using MaterialDesignThemes.Wpf;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -166,7 +164,7 @@ namespace TournamentAssistantUI.UI
         {
             _ = Dispatcher.Invoke(async () =>
             {
-                var result = await DialogHost.Show(new PlayerDialog(MatchBox.PlayerListBox.SelectedItem as Player), "RootDialog");
+                var result = await DialogHost.Show(new PlayerDialog(MatchBox.PlayerListBox.SelectedItem as Player, new CommandImplementation(KickPlayer_Executed)), "RootDialog");
             });
         }
 
@@ -250,6 +248,19 @@ namespace TournamentAssistantUI.UI
 
                 Dispatcher.Invoke(() => ClosePage.Execute(this));
             }
+        }
+
+        private void KickPlayer_Executed(object parameter)
+        {
+            //Remove player from list
+            var player = parameter as Player;
+            var newPlayers = Match.Players.ToList();
+            newPlayers.RemoveAt(newPlayers.IndexOf(player));
+            Match.Players = newPlayers.ToArray();
+
+            //Notify all the UI that needs to be notified, and propegate the info across the network
+            NotifyPropertyChanged(nameof(Match));
+            MainPage.Connection.UpdateMatch(Match);
         }
 
         private async void LoadSong_Executed(object obj)
@@ -352,8 +363,8 @@ namespace TournamentAssistantUI.UI
                 //If we're using a custom host, we don't need to find a new hash, we can just download it by id
                 try
                 {
-                    var hash = BeatSaverDownloader.GetHashFromID(songId);
-                    BeatSaverDownloader.DownloadSongThreaded(hash,
+                    var hash = TournamentAssistantShared.BeatSaver.BeatSaverDownloader.GetHashFromID(songId);
+                    TournamentAssistantShared.BeatSaver.BeatSaverDownloader.DownloadSongThreaded(hash,
                         (successfulDownload) =>
                         {
                             SongLoading = false;
@@ -603,14 +614,12 @@ namespace TournamentAssistantUI.UI
                 //Send Green background for players to display
                 using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                 {
-                    var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
-                    SendToPlayers(new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = greenData
-                    }));
+                    SendToPlayers(new Packet(
+                        new File(
+                            QRUtils.ConvertBitmapToPngBytes(greenBitmap),
+                            intentions: File.Intentions.SetPngToShowWhenTriggered
+                        )
+                    ));
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
@@ -735,14 +744,16 @@ namespace TournamentAssistantUI.UI
                     Match.Players[i].StreamDelayMs = 0;
                     Match.Players[i].StreamScreenCoordinates = default;
                     Match.Players[i].StreamSyncStartMs = 0;
-
-                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"))
-                    }));
+                    
+                    MainPage.Connection.Send(
+                        Match.Players[i].Id,
+                        new Packet(
+                            new File(
+                                QRUtils.GenerateQRCodePngBytes($"https://scoresaber.com/u/{Match.Players[i].UserId}"),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        )
+                    );
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);
@@ -852,14 +863,12 @@ namespace TournamentAssistantUI.UI
                     //Send the green background
                     using (var greenBitmap = QRUtils.GenerateColoredBitmap())
                     {
-                        var greenData = CompressionUtils.Compress(QRUtils.ConvertBitmapToPngBytes(greenBitmap));
-                        SendToPlayers(new Packet(new File()
-                        {
-                            FileId = Guid.NewGuid().ToString(),
-                            Intent = File.Intentions.SetPngToShowWhenTriggered,
-                            Compressed = true,
-                            Data = greenData
-                        }));
+                        SendToPlayers(new Packet(
+                            new File(
+                                QRUtils.ConvertBitmapToPngBytes(greenBitmap),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        ));
                     }
 
                     while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedGreenImage.Contains(x))) await Task.Delay(0);
@@ -993,13 +1002,15 @@ namespace TournamentAssistantUI.UI
                     Match.Players[i].StreamScreenCoordinates = default;
                     Match.Players[i].StreamSyncStartMs = 0;
 
-                    MainPage.Connection.Send(Match.Players[i].Id, new Packet(new File()
-                    {
-                        FileId = Guid.NewGuid().ToString(),
-                        Intent = File.Intentions.SetPngToShowWhenTriggered,
-                        Compressed = true,
-                        Data = CompressionUtils.Compress(QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")))
-                    }));
+                    MainPage.Connection.Send(
+                        Match.Players[i].Id,
+                        new Packet(
+                            new File(
+                                QRUtils.GenerateQRCodePngBytes(Hashing.CreateSha1FromString($"Nice try. ;) https://scoresaber.com/u/{Match.Players[i].UserId} {Match.Guid}")),
+                                intentions: File.Intentions.SetPngToShowWhenTriggered
+                            )
+                        )
+                    );
                 }
 
                 while (!_syncCancellationToken.Token.IsCancellationRequested && !Match.Players.Select(x => x.Id).All(x => _playersWhoHaveDownloadedQrImage.Contains(x))) await Task.Delay(0);

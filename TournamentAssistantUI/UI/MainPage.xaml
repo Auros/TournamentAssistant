@@ -5,88 +5,233 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TournamentAssistantUI.UI"
       mc:Ignorable="d" 
-      d:DesignHeight="670" d:DesignWidth="720"
+      d:DesignHeight="800" d:DesignWidth="720"
       Title="MainPage"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
       xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
       xmlns:UserControls="clr-namespace:TournamentAssistantUI.UI.UserControls"
+      xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop" 
       TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+      d:DataContext="{d:DesignInstance Type=local:MainPage}"
       TextElement.FontWeight="Regular"
       TextElement.FontSize="13"
       TextOptions.TextFormattingMode="Ideal"
       TextOptions.TextRenderingMode="Auto"
       Background="{DynamicResource MaterialDesignPaper}"
       FontFamily="{DynamicResource MaterialDesignFont}">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
-            <RowDefinition />
-            <RowDefinition Height="25" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="25" />
-            <ColumnDefinition />
-            <ColumnDefinition Width="25" />
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Row="1" Grid.Column="1" >
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Border BorderThickness="1" BorderBrush="{DynamicResource PrimaryHueMidBrush}" MinWidth="256" MinHeight="256" ClipToBounds="True" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <ListBox x:Name="PlayerListBox" SelectionMode="Multiple" ItemsSource="{Binding Connection.State.Players}" DisplayMemberPath="Name"/>
-                        <materialDesign:ColorZone Mode="PrimaryMid" Grid.Row="1" Effect="{DynamicResource MaterialDesignShadowDepth5}">
-                            <TextBlock Text="{Binding Path=Connection.State.Players.Count, StringFormat='Player Waiting Room ({0})'}" Margin="16" />
-                        </materialDesign:ColorZone>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding CreateMatch}" ToolTip="Create Match" VerticalAlignment="Bottom" HorizontalAlignment="Right" Grid.Row="0" Margin="0 0 28 -20">
-                            <materialDesign:PackIcon Kind="AccountMultipleAdd" Height="22" Width="22" />
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding AddAllPlayersToMatch}" ToolTip="Create Match USING ALL PLAYERS" VerticalAlignment="Bottom" HorizontalAlignment="Left" Grid.Row="0" Margin="28 0 0 -15">
-                            <materialDesign:PackIcon Kind="ErrorOutline" Height="22" Width="22" />
-                        </Button>
-                    </Grid>
-                </Border>
-                <GroupBox Grid.Column="1" Header="Ongoing Matches" Margin="16">
-                    <ListBox HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Connection.State.Matches}" PreviewMouseWheel="MatchListBox_PreviewMouseWheel">
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <UserControls:MatchItem DataContext="{Binding RelativeSource={RelativeSource Self}}" Match="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Grid}}" Connection="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Page}}, Path=Connection}" MouseUp="MatchListItemGrid_MouseUp"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </GroupBox>
-            </Grid>
-            <GroupBox VerticalAlignment="Bottom" Grid.Row="1" HorizontalAlignment="Center" Header="Connected Coordinators" MinHeight="100" MinWidth="265" Margin="0,25,0,0">
-                <ListBox ItemsSource="{Binding Connection.State.Coordinators}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+
+    <Page.Resources>
+        <Storyboard x:Key="MenuOpen">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="280">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
+                <EasingDoubleKeyFrame KeyTime="0" Value="0"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.21" Value="{Binding ActualWidth, ElementName=MainGrid}"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+        <Storyboard x:Key="MenuClose">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="Menu">
+                <EasingDoubleKeyFrame KeyTime="0" Value="280"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="0">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="OpenMenuOutsideBounds">
+                <EasingDoubleKeyFrame KeyTime="0" Value="{Binding ActualWidth, ElementName=OpenMenuOutsideBounds}"/>
+                <EasingDoubleKeyFrame KeyTime="0:0:0.01" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Page.Resources>
+    <Page.Triggers>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonOpenMenu">
+            <BeginStoryboard Storyboard="{StaticResource MenuOpen}"/>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="ButtonBase.Click" SourceName="ButtonCloseMenu">
+            <BeginStoryboard Storyboard="{StaticResource MenuClose}"/>
+        </EventTrigger>
+    </Page.Triggers>
+
+    <Grid x:Name="MainGrid">
+        <!--Top panel-->
+        <Grid x:Name="TopPanel" Height="50" VerticalAlignment="Top" Background="#FF003F74">
+            <TextBlock Text="Create Room" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" Foreground="#DDFF3434"/>
+            <Button x:Name="ButtonOpenMenu" VerticalAlignment="Center" HorizontalAlignment="Left" Background="{x:Null}" BorderBrush="{x:Null}">
+                <materialDesign:PackIcon Kind="Menu" Width="25" Height="25"/>
+            </Button>
+        </Grid>
+        <Grid x:Name="Menu" Width="0" HorizontalAlignment="Left" Background="#FF002E55" Panel.ZIndex="3">
+            <StackPanel>
+                <Grid Height="150" Panel.ZIndex="2" Background="#FF005EAE">
+                    <Button x:Name="ButtonCloseMenu" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+                        <materialDesign:PackIcon Kind="ArrowLeft" Width="25" Height="25"/>
+                    </Button>
+                </Grid>
+                <StackPanel ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <Button x:Name="NewMatch" Click="NewMatch_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="StarThreePoints" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="New Match" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="OngoingMatches" Click="OngoingMatches_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="BaseballBat" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Ongoing Matches" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ConnectedCoordinators" Click="ConnectedCoordinators_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="AccountTieVoice" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connected Coordinators" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ConnectedClients" Click="ConnectedClients_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="Account" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connected Clients" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ConnectionLog" Click="ConnectionLog_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="LanConnect" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Connection Log" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ServerSettings" Click="ServerSettings_Click" Background="{x:Null}" BorderBrush="{x:Null}" Height="60" Width="{Binding ActualWidth, ElementName=Menu}" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" Width="{Binding ActualWidth, ElementName=Menu}">
+                            <materialDesign:PackIcon Kind="Database" Width="25" Height="25" Margin="5 0 10 0"/>
+                            <TextBlock Text="Server Settings" VerticalAlignment="Center" Foreground="#FF1591E8" FontSize="20" FontWeight="Bold" FontStyle="Italic" FontFamily="Calibri"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+        <Button x:Name="OpenMenuOutsideBounds" Click="OpenMenuOutsideBounds_Click" Width="0" Height="{Binding ActualHeight, ElementName=MainGrid}" Background="{x:Null}" BorderBrush="{x:Null}" Foreground="{x:Null}" Panel.ZIndex="2"/>
+        <Grid x:Name="MainWindow" Margin="0 50 0 120" Height="auto" Width="auto">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Height="auto" MinHeight="500" Width="auto" Margin="20 50 0 50" Background="#FF2C2C2C" Panel.ZIndex="1">
+                <ListBox x:Name="PlayerListBoxLeft" SelectionMode="Multiple" ItemsSource="{Binding ListBoxLeftView}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <materialDesign:Chip Content="{Binding Name}" Icon="{Binding GetIcon}" />
+                            <materialDesign:Chip Content="{Binding Name}">
+                                <materialDesign:Chip.Icon>
+                                    <Image Source="{Binding AvatarURL}"/>
+                                </materialDesign:Chip.Icon>
+                            </materialDesign:Chip>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="Kick" Command="{Binding KickPlayer}"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                 </ListBox>
-            </GroupBox>
+            </Border>
+            <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="80" MinHeight="300">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="15"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Button Grid.Row="0" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveAllRight}" ToolTip="Move all players to the right" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowRightOutline"></materialDesign:PackIcon>
+                </Button>
+                <Button Grid.Row="1" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveSelectedRight}" ToolTip="Move selected players to the right" Margin="0 10 0 20" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowRight"></materialDesign:PackIcon>
+                </Button>
+                <Button Grid.Row="3" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveSelectedLeft}" ToolTip="Move selected players to the left" Margin="0 20 0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowLeft"></materialDesign:PackIcon>
+                </Button>
+                <Button Grid.Row="4" Style="{StaticResource MaterialDesignFloatingActionMiniAccentButton}" Command="{Binding MoveAllLeft}" ToolTip="Move all players to the left" Margin="0 10" Background="#FF1591E8" Foreground="#DD000000">
+                    <materialDesign:PackIcon Kind="AccountArrowLeftOutline"></materialDesign:PackIcon>
+                </Button>
+            </Grid>
+            <Border Grid.Column="2" CornerRadius="5" BorderThickness="1" BorderBrush="#FF211717" Margin="0 50 20 50" Height="auto" MinHeight="500" Width="auto" Background="#FF2C2C2C" Panel.ZIndex="1">
+                <ListBox x:Name="PlayerListBoxRight" SelectionMode="Multiple" ItemsSource="{Binding ListBoxRightView}" dd:DragDrop.IsDragSource="True" dd:DragDrop.IsDropTarget="True">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <materialDesign:Chip Content="{Binding Name}">
+                                <materialDesign:Chip.Icon>
+                                    <Image Source="{Binding AvatarURL}"/> 
+                                </materialDesign:Chip.Icon>
+                            </materialDesign:Chip>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="" Command=""/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </Border>
+        </Grid>
+        <Grid Margin="0 0 0 30" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="{Binding ActualWidth, ElementName=MainGrid}" Height="120">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Button Grid.Column="0" Grid.Row="0" Content="Settings" Margin="70 10" Height="35" Width="210" BorderBrush="{x:Null}" IsEnabled="False">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Grid.Column="0" Grid.Row="1" Content="Disconnect" Command="{Binding DisconnectFromServer}" Margin="70 10" Height="35" Width="210" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Grid.Column="1" Grid.Row="0" Content="Create Standard Match" Command="{Binding CreateStandardMatch}" Margin="70 10" Height="35" Width="210" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+            <Button Grid.Column="1" Grid.Row="1" Content="Create Battle Royale Match" Command="{Binding CreateBRMatch}" Margin="70 10" Height="35" Width="210" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF1E62A0" Offset="1"/>
+                        <GradientStop Color="#FF196ED0"/>
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
         </Grid>
     </Grid>
 </Page>
